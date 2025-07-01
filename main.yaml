@@ -2,7 +2,6 @@
   openapi: 3.0.0
   servers:
     - url: 'http://172.17.1.97:30050'
-      description: Production Gateway
   info:
     title: Combined API
     version: 1.0.0
