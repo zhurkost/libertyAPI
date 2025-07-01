@@ -8,7 +8,7 @@ info:
     системе.
   version: 1.0.0
 servers:
-  - url: 'http://172.17.1.70:30040'
+  - url: 'http://172.17.1.97:30050'
     description: dev stand
 security:
   - bearerAuth: []
