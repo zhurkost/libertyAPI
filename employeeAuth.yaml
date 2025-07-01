@@ -1,0 +1,220 @@
+openapi: 3.0.3
+info:
+  title: Авторизация сотрудника по корпоративной почте и паролю
+  version: 0.0.1
+servers:
+  - url: http://172.17.1.97:30500/login
+    description: Сервер авторизации сотрудников
+paths:
+  /auth/api/v1/login:
+    post:
+      summary: Авторизация сотрудника через корпоративную почту
+      description: Метод позволяет сотруднику авторизоваться в системе с использованием корпоративного email и пароля.
+      tags:
+        - Authorization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+        '400':
+          description: Неверный запрос (невалидные данные)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestResponse'
+        '401':
+          description: Неверный логин или пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Учетная запись заблокирована
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountLockedResponse'
+        '404':
+          description: Email не зарегистрирован в системе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundResponse'
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+        - bearerAuth: []
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "employee@example.com"
+          description: Корпоративная почта сотрудника
+        password:
+          type: string
+          example: "SecurePassword123!"
+          description: Пароль сотрудника (в зашифрованном виде)
+      required:
+        - email
+        - password
+
+    LoginSuccessResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+          example: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5M2ZhZGM4ZS1iZWZmLTRhMDEtYmY5YS05OWQwYTVjY2I2ODkiLCJlbWFpbCI6ImVtcGxveWVlQGV4YW1wbGUuY29tIiwicm9sZXMiOlsiQWRtaW4iLCJFbXBsb3llZSJdLCJpYXQiOjE2ODExOTIwMDB9"
+      required:
+        - accessToken
+
+    BadRequestResponse:
+      type: object
+      properties:
+        uri:
+          type: string
+          example: "/auth/api/v1/login"
+          description: Путь к эндпоинту
+        status:
+          type: string
+          example: "400"
+          description: Код состояния HTTP
+        message:
+          type: string
+          example: "Invalid request data."
+          description: Сообщение об ошибке
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+                description: Поле с ошибкой
+              message:
+                type: string
+                example: "Must be a valid email address"
+                description: Описание ошибки
+            required:
+              - field
+              - message
+          description: Список ошибок валидации
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-04-10T18:30:00Z"
+          description: Временная метка события
+      required:
+        - uri
+        - status
+        - message
+        - errors
+        - timestamp
+
+    ErrorResponse:
+      type: object
+      properties:
+        uri:
+          type: string
+          example: "/auth/api/v1/login"
+          description: Путь к эндпоинту
+        status:
+          type: string
+          example: "401"
+          description: Код состояния HTTP
+        message:
+          type: string
+          example: "Unauthorized."
+          description: Сообщение об ошибке
+        remaining_attempts:
+          type: number
+          example: 2
+          description: Количество оставшихся попыток
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-04-10T18:30:00Z"
+          description: Временная метка события
+      required:
+        - uri
+        - status
+        - message
+        - remaining_attempts
+        - timestamp
+
+    AccountLockedResponse:
+      type: object
+      properties:
+        uri:
+          type: string
+          example: "/auth/api/v1/login"
+          description: Путь к эндпоинту
+        status:
+          type: string
+          example: "403"
+          description: Код состояния HTTP
+        message:
+          type: string
+          example: "Your account is locked due to multiple failed login attempts."
+          description: Сообщение об ошибке
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-04-10T18:30:00Z"
+          description: Временная метка события
+      required:
+        - uri
+        - status
+        - message
+        - timestamp
+
+    NotFoundResponse:
+      type: object
+      properties:
+        uri:
+          type: string
+          example: "/auth/api/v1/login"
+          description: Путь к эндпоинту
+        status:
+          type: string
+          example: "404"
+          description: Код состояния HTTP
+        message:
+          type: string
+          example: "Email not registered in the system."
+          description: Сообщение об ошибке
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-04-10T18:30:00Z"
+          description: Временная метка события
+      required:
+        - uri
+        - status
+        - message
+        - timestamp
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

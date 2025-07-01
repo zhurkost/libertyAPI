@@ -1,0 +1,397 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-3 US-2 Просмотр профиля сотрудника
+  description: >-
+    API предназначен для работы с просмотром карточки профиля сотрудника. 
+    Содержит эндпоинты для получения информации о сотруднике, его учетной записи и 
+    адресе офиса.
+    API возвращает данные в готовом для отображения формате. 
+    Даты представлены в формате DD.MM.YYYY, даты-время - DD.MM.YYYY HH:MM:SS.
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.70:30040'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: info
+    description: Операции с инфо сервисом  
+  - name: employee
+    description: Операции с сотрудниками  
+  - name: employee-auth
+    description: Операции с аккаунтами
+  - name: employee-manage-service
+    description: Комплексный сервис управления сотрудниками.
+paths:
+  /bank-addresses/profile-view/{bankAddressId}:
+    get:
+      security: []  
+      parameters:
+      - name: bankAddressId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      tags: 
+        - info
+      summary: Получить адрес офиса банка
+      description: Возвращает адрес офиса банка
+      responses:
+        '200':
+          description: Адрес офиса банка
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bankAddressProfileView" 
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/bank-addresses/profile-view/{bankAddressId}"                                   
+  /employee-accounts/with-last-login:
+    get:
+      parameters:
+      - name: employeeId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      tags: 
+        - employee-auth
+      summary: Получить учетную запись сотрудника с датой и временем последнего входа
+      description: Возвращает учетную запись сотрудника с датой и временем последнего входа
+      security:
+      - bearerAuth: [SUPER_ADMIN]  # Требуется роль ADMIN
+      responses:
+        '200':
+          description: Учетная запись сотрудника с датой и временем последнего входа
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/account"
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/employee-accounts/with-last-login" 
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/employee-accounts/with-last-login"  
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/employee-accounts/with-last-login"                                   
+  /employees/{employeeId}:
+    get:
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      tags: 
+        - employee
+      summary: Получить информацию о сотруднике
+      description: Возвращает данные о сотруднике
+      responses:
+        '200':
+          description: сотрудник
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/employee"
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/employees" 
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/employees"  
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/employees"                                   
+  /employee-manage-service/profiles/{employeeId}:
+    get:
+      parameters:
+      - name: employeeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      tags: 
+        - employee-manage-service
+      summary: Получить карточку профиля сотрудника
+      description: Аггрегирует данные из info, employee и employee-auth сервисов для формирования карточки профиля сотрудника
+      responses:
+        '200':
+          description: карточка профиля сотруднкиа
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/employeeProfile"
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/employee-manage-service/profiles/{employeeId}" 
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/employee-manage-service/profiles/{employeeId}"  
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/employee-manage-service/profiles/{employeeId}"  
+components:
+  schemas:
+    account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        corpEmail:
+          type: string
+          example: 'i.ivanov2@libertybank.ru'
+        createdAt:
+          type: string
+          description: 'Дата в формате DD.MM.YYYY'
+          example: '19.10.2025'
+        status:
+          type: string
+          example: 'ACTIVE'
+        lastLogin:
+          type: string
+          description: 'Дата и время в формате DD.MM.YYYY HH:MM:SS'
+          example: '19.10.2025 08:45:10'
+          nullable: true
+      required:
+        - id
+        - corpEmail
+        - createdAt
+        - status
+        - lastLogin
+    employee:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        firstName:
+          type: string
+          example: 'Алексей'
+        lastName:
+          type: string
+          example: 'Иванов'
+        patronymic:
+          type: string
+          example: 'Васильевич'
+          nullable: true
+        birthday:
+          type: string
+          description: 'Дата в формате DD.MM.YYYY'
+          example: '30.01.2000'
+        phoneNumber:
+          type: string
+          description: 'номер телефона в формате +X (XXX) XXX-XX-XX'
+          example: '+7 (999) 666-11-00'
+        email:
+          type: string
+          example: 'petrpetrov@gmail.com'
+        bankAddressId:
+          type: string
+          format: uuid
+          example: '42e0623c-6e6d-11ed-a1eb-0242ac120004'
+        positionName:
+          type: string
+          example: 'Операционист'
+        departmentName:
+          type: string
+          example: 'Отдел кредитования'
+      required:
+        - id
+        - firstName
+        - lastName
+        - patronymic
+        - birthday
+        - phoneNumber
+        - email
+        - status
+        - bankAddressId
+        - positionName
+        - departmentName
+    bankAddressProfileView:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        cityName:
+          type: string
+          example: 'Москва'
+        streetTypeShort:
+          type: string
+          example: 'ул.'        
+        street:
+          type: string
+          example: 'Энтузиастов'
+        house:
+          type: string
+          example: '5 к.1'
+        phoneNumber:
+          type: string
+          description: 'номер телефона в формате +X (XXX) XXX-XX-XX'
+          example: '+7 (999) 924-77-66'
+      required:
+        - id
+        - cityName
+        - streetTypeShort
+        - street
+        - house
+        - phoneNumber
+    employeeProfile:
+      type: object
+      properties:
+        employee:
+          $ref: "#/components/schemas/employee"
+        account:
+          $ref: "#/components/schemas/account"
+        bankAddressProfileView:
+          $ref: "#/components/schemas/bankAddressProfileView"
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-09-03T09:50:05Z"
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "INTERNAL SERVER ERROR"
+        message:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+        path:
+          type: string
+          example: "/api/v1/employees"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path 
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

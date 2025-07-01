@@ -1,0 +1,225 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-6 US-1 Получение уведомления сотрудником о необходимости смены пароля
+  description: >
+    API для работы с уведомлениями
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.70:30040/api/v1'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: Notification
+paths:
+  /api/v1/notifications/{customerId}:
+    get:
+      tags:
+        - Notification
+      summary: Установка SSE-соединения
+      description: |
+        Устанавливает Server-Sent Events (SSE) соединение для получения уведомлений в реальном времени.
+        Сервер будет поддерживать соединение открытым и отправлять события в формате:
+        ```
+        event: <тип_события>
+        data: <json_данные>
+        ```
+      parameters:
+        - name: customerId
+          in: path
+          description: UUID клиента
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8"
+        - name: Accept
+          in: header
+          description: Должен быть text/event-stream для SSE
+          required: true
+          schema:
+            type: string
+            enum: [text/event-stream]
+          example: "text/event-stream"
+        - name: Cache-Control
+          in: header
+          description: Отключает кеширование
+          required: true
+          schema:
+            type: string
+            enum: [no-cache]
+          example: "no-cache"
+        - name: Connection
+          in: header
+          description: Поддержка постоянного соединения
+          required: true
+          schema:
+            type: string
+            enum: [keep-alive]
+          example: "keep-alive"
+      responses:
+        '200':
+          description: |
+            SSE-соединение успешно установлено.
+            Сервер будет отправлять события в формате:
+            ```
+            event: notification
+            data: {
+              "notification_id": "abf1b69f-e2dd-49f1-b5e0-df923f0a9a5f",
+              "user_id": "eac1246d-59e2-4b89-a147-0e890afcc53d",
+              "title": "Смена пароля",
+              "message": "До блокировки вашего аккаунта остался 1 день",
+              "severity": "CRITICAL",
+              "delivered_at": "2025-05-29T09:00:00Z"
+            }
+            ```
+          headers:
+            Content-Type:
+              schema:
+                type: string
+              example: "text/event-stream"
+        '401':
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    uri: "/api/v1/notifications/{customerId}"
+                    statusCode: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    timestamp: "2024-09-03T09:50:05Z"
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalError:
+                  value:
+                    uri: "/api/v1/notifications/{customerId}"
+                    statusCode: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Не удалось установить SSE-соединение"
+                    timestamp: "2024-09-03T09:50:05Z"
+
+  /api/v1/notifications/{notification_id}:
+    patch:
+      tags:
+        - Notification
+      summary: Скрыть уведомление или все уведомления пользователя
+      description: >
+        Меняет статус уведомлений на DISMISSED. Если указано applyToAll: true, будут скрыты все уведомления
+        пользователя со статусом SENT. В противном случае — только уведомление по notification_id.
+      parameters:
+        - name: notification_id
+          in: path
+          description: UUID уведомления
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationStatusUpdateRequest"
+      responses:
+        '200':
+          description: Статус обновлен
+        '401':
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    uri: "/api/v1/notifications/{notification_id}"
+                    statusCode: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    timestamp: "2024-09-03T09:50:05Z"
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    uri: "/api/v1/notifications/{notification_id}"
+                    statusCode: 403 
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    timestamp: "2024-09-03T09:50:05Z"
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError:
+                  value:
+                    uri: "/api/v1/notifications/{notification_id}"
+                    statusCode: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    timestamp: "2024-09-03T09:50:05Z"
+
+components:
+  schemas:
+    NotificationStatusUpdateRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [DISMISSED]
+          description: Новый статус уведомления
+        applyToAll:
+          type: boolean
+          description: >
+            Если `true`, скрывает все уведомления пользователя со статусом `SENT`.
+            Если `false` или отсутствует — скрывает только одно уведомление по `notification_id`.
+          example: true
+
+    Error:
+      type: object
+      required:
+        - uri
+        - statusCode
+        - error
+        - message
+        - timestamp
+      properties:
+        uri:
+          type: string
+          example: "/api/v1/notifications/{notification_id}"
+        statusCode:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "INTERNAL SERVER ERROR"
+        message:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-09-03T09:50:05Z"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

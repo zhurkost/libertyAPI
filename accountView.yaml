@@ -1,0 +1,120 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-4 US-2 Просмотр счетов
+  description: >-
+    API предназначен для просмотра счетов клиента
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.70:30040/api/v1'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: account
+    description: Просмотр счетов
+paths:
+   /api/v1/accounts:
+    get:
+      tags:
+        - account
+      summary: получить список всех счетов клиента
+      description: возвращает массив счетов
+      parameters:
+        - name: customerId
+          in: query
+          description: уникальный идентификатор клиента по которому делается выборка
+          required: false
+          schema:
+            type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+      responses:
+        '200':
+          description: список счетов клиента
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accounts:
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/accounts"
+        '401':
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    uri: "/api/v1/accounts"
+                    statusCode: 401
+                    errorMessage: "Требуется авторизация"
+                    timestamp: "2024-09-03T09:50:05Z"                          
+components:
+  schemas:
+    accounts:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        accountNumber:
+          type: string
+          example: "40802810800000003298"
+        customerId:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        accountTypeId:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        isActive:
+          type: boolean
+          example: True
+        balanceId:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        openDate:
+          type: string
+          example: "2021-12-28"
+        closeDate:
+          type: string
+          nullable: true
+          example: null
+        autoPayments:
+          type: boolean
+          example: true
+        internetBanking:
+          type: boolean
+          example: true
+        typeName:
+          type: string
+          example: "Премиум" 
+      required:
+        - id
+        - accountNumber
+        - customerId
+        - accountTypeId
+        - openDate
+        - typeName
+    Error:
+      type: object
+      properties:
+        uri:
+          type: string
+          example: "/api/v1/accounts"       
+        statusCode:
+          type: number
+          example: 500              
+        errorMessage:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+      required:
+        - uri
+        - statusCode
+        - errorMessage    
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

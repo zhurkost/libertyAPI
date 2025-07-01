@@ -1,0 +1,475 @@
+openapi: 3.0.0
+info:
+  title: Просмотр информации по клиенту
+  description: >-
+    Эндпоинт описывает процесс получения информации по клиену.
+    Необходимо получить данные о клиенте из Customer DB.
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.97:30005'
+paths:
+  /customer/api/v1/customers/{id}:
+    get:
+      summary: Просмотр личной информации по клиенту
+      parameters: 
+        - name : id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный ответ с информацией по клиенту
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/customer"
+        '400':
+          description: Ошибка загрузки данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 400
+                  error: BAD REQUEST
+                  message: Что-то пошло не так. Повторите попытку позже
+                  path: /api/v1/customers/{id}
+        '401':
+          description: Ошибка авторизации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 401
+                  error: UNAUTHORIZED
+                  message: Требуется авторизация
+                  path: /api/v1/customers/{id}
+        '403':
+          description: Отсутствие прав доступа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 403
+                  error: FORBIDDEN
+                  message: У вас нет прав на выполнение этой операции
+                  path: /api/v1/customers/{id}
+        '500':
+          description: Ошибка загрузки данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 500
+                  error: INTERNAL SERVER ERROR
+                  message: Ошибка загрузки данных
+                  path: /api/v1/customers/{id}
+                  
+  /customer/api/v1/employment-details/{customerId}:
+    get:
+      summary: Просмотр информации по трудоустройству клиента
+      parameters: 
+        - name : customerId
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный ответ с информацией по трудоустройству клиента (разные виды трудоустройства)
+          content: 
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/permanent"
+                  - $ref: "#/components/schemas/temporary"
+                  - $ref: "#/components/schemas/selfEmployed"
+                  - $ref: "#/components/schemas/individualEntrepreneur"
+                discriminator:
+                  propertyName: typeOfEmployment
+        '400':
+          description: Ошибка загрузки данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 400
+                  error: BAD REQUEST
+                  message: Что-то пошло не так. Повторите попытку позже
+                  path: /api/v1/employment-details/{customerId}
+        '401':
+          description: Ошибка авторизации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 401
+                  error: UNAUTHORIZED
+                  message: Требуется авторизация
+                  path: /api/v1/employment-details/{customerId}
+        '403':
+          description: Отсутствие прав доступа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 403
+                  error: FORBIDDEN
+                  message: У вас нет прав на выполнение этой операции
+                  path: /api/v1/employment-details/{customerId}
+        '500':
+          description: Ошибка загрузки данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 500
+                  error: INTERNAL SERVER ERROR
+                  message: Ошибка загрузки данных
+                  path: /api/v1/employment-details/{customerId}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    customer:
+      type: object
+      required:
+       - customerStatus
+       - firstName
+       - lastName
+       - phoneNumber
+       - email
+       - birthDate
+       - country
+       - town
+       - street
+       - houseNumber
+       - apartmentNumber
+       - postcode
+       - factCountry
+       - factTown
+       - factStreet
+       - factHouseNumber
+       - factApartmentNumber
+       - factPostcode
+       - itn
+       - snPassport
+       - issueDate
+       - placeOfBirth
+       - departmentCode
+       - issuedBy
+       - snils
+      properties: 
+        customerStatus:
+          type: string
+          enum:
+            - active
+            - archive
+            - blocked
+        firstName:
+          type: string
+          example: Александр
+        lastName: 
+          type: string
+          example: Иванов
+        patronymic:
+          type: string
+          example: Петрович
+        phoneNumber:
+          type: string
+          example: +7 (800) 555-35-35
+          pattern: "^\\+7 \\(\\d{3}\\) \\d{3}-\\d{2}-\\d{2}$"
+        email:
+          type: string
+          example: ivanovalex@mail.ru
+        birthDate:
+          type: string
+          example: 17.03.1997
+          pattern: "^\\d{2}\\.\\d{2}\\.\\d{4}$"
+        country:
+          type: string
+          example: Россия
+        region:
+          type: string
+          example: Краснодарский край
+        town:
+          type: string
+          example: Краснодар
+        street:
+          type: string
+          example: Морская
+        houseNumber:
+          type: string
+          example: 17
+        apartmentNumber:
+          type: number
+          example: 133
+        postcode: 
+          type: number
+          example: 377337
+        factCountry:
+          type: string
+          example: Россия
+        factRegion:
+          type: string
+          example: Краснодарский край
+        factTown:
+          type: string
+          example: Краснодар
+        factStreet:
+          type: string
+          example: Баварская
+        factHouseNumber:
+          type: string
+          example: 20
+        factApartmentNumber:
+          type: number
+          example: 10
+        factPostcode: 
+          type: number
+          example: 376890
+        itn:
+         type: string
+         example: 500100732259
+        snPassport:
+          type: string
+          example: 1145657654
+        issueDate:
+          type: string
+          example: 26.03.2023
+          pattern: "^\\d{2}\\.\\d{2}\\.\\d{4}$"
+        placeOfBirth:
+          type: string
+          example: Краснодар
+        departmentCode:
+          type: string
+          example: 230-004
+          pattern: "^\\d{3}-\\d{3}$"
+        issuedBy:
+          type: string
+          example: ГУ МВД России по Краснодарской области
+        snils:
+          type: string
+          example: 123-456-789 01
+          pattern: "^\\d{3}-\\d{3}-\\d{3} \\d{2}$"
+    
+    permanent:
+      type: object
+      required:
+        - typeOfEmployment
+        - placeOfEmployment
+        - position
+        - startDate
+        - monthlySalary
+        - companyPhone
+        - country
+        - town
+        - street
+        - houseNumber
+        - postcode
+      properties:
+        typeOfEmployment:
+          type: string
+          example: Постоянная занятость
+        placeOfEmployment:
+          type: string
+          example: Джипи Солюшнс
+        position:
+          type: string
+          example: Аудитор
+        startDate:
+          type: string
+          example: 18.09.2018
+          pattern: "^\\d{2}\\.\\d{2}\\.\\d{4}$"
+        monthlySalary:
+          type: number
+          example: 180000
+        companyPhone:
+          type: string
+          example: +7 (809) 786-53-46
+          pattern: "^\\+7 \\(\\d{3}\\) \\d{3}-\\d{2}-\\d{2}$"
+        country:
+          type: string
+          example: Россия
+        region:
+          type: string
+          example: Краснодарский край
+        town:
+          type: string
+          example: Краснодар
+        street:
+          type: string
+          example: Цветочная
+        houseNumber:
+          type: string
+          example: 5
+        officeNumber:
+          type: number
+          example: 456
+        postcode: 
+          type: number
+          example: 230004
+
+
+    temporary:
+      type: object
+      required:
+        - typeOfEmployment
+        - placeOfEmployment
+        - position
+        - startDate
+        - monthlySalary
+        - termOfEmployment
+        - companyPhone
+        - companyAddress
+        - country
+        - town
+        - street
+        - houseNumber
+        - postcode
+      properties:
+        typeOfEmployment:
+          type: string
+          example: Временная занятость
+        placeOfEmployment:
+          type: string
+          example: Джипи Солюшнс
+        position:
+          type: string
+          example: Аудитор
+        startDate:
+          type: string
+          example: 17.02.2027
+          pattern: "^\\d{2}\\.\\d{2}\\.\\d{4}$"
+        monthlySalary:
+          type: number
+          example: 180000
+        termOfEmployment:
+          type: string
+          example: 17.04.2027
+          pattern: "^\\d{2}\\.\\d{2}\\.\\d{4}$"
+        companyPhone:
+          type: string
+          example: +7 (809) 786-53-46
+          pattern: "^\\+7 \\(\\d{3}\\) \\d{3}-\\d{2}-\\d{2}$"
+        country:
+          type: string
+          example: Россия
+        region:
+          type: string
+          example: Краснодарский край
+        town:
+          type: string
+          example: Краснодар
+        street:
+          type: string
+          example: Цветочная
+        houseNumber:
+          type: string
+          example: 5
+        officeNumber:
+          type: number
+          example: 456
+        postcode: 
+          type: number
+          example: 230004
+
+
+
+
+    selfEmployed:
+      type: object
+      required:
+        - typeOfEmployment
+        - typeOfActivity
+        - registrationDate
+        - monthlySalary
+      properties:
+        typeOfEmployment:
+          type: string
+          example: Самозанятый
+        typeOfActivity:
+          type: string
+          example: Репетиторство
+        registrationDate:
+          type: string
+          example: 18.04.2013
+          pattern: "^\\d{2}\\.\\d{2}\\.\\d{4}$"
+        monthlySalary:
+          type: number
+          example: 180000
+    individualEntrepreneur:
+      type: object
+      required:
+        - typeOfEmployment
+        - psrnsp
+        - businessName
+        - typeOfActivity
+        - registrationDate
+        - monthlySalary
+      properties:
+        typeOfEmployment:
+          type: string
+          example: Индивидуальный предприниматель
+        psrnsp:
+          type: string
+          example: 319774600123456
+        businessName:
+          type: string
+          example: ИП Иванов Александр Петрович
+        typeOfActivity:
+          type: string
+          example: Торговля
+        registrationDate:
+          type: string
+          example: 18.04.2013
+          pattern: "^\\d{2}\\.\\d{2}\\.\\d{4}$"
+        monthlySalary:
+          type: number
+          example: 180000
+    error:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - path
+      properties:
+        timestamp:
+          type: string
+          example: временная метка
+        status:
+          type: integer
+          example: код состояния HTTP
+        error:
+          type: string
+          example: пояснение к коду состояния
+        message:
+          type: string
+          example: сообщение об ошибке
+        path:
+          type: string
+          example: путь к EP

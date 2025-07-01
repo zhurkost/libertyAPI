@@ -1,0 +1,216 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-5 US-6 Дебетовые карты:Просмотр списка
+  description: >-
+    API предназначено для просмотра списка дебетовых карт.
+    Содержит эндпоинты для получения информации о дебетовых картах клиента и его банковских счетах.
+  version: 1.0.0
+  
+servers:
+  - url: 'http://172.17.1.97:30500/api/v1'
+    description: dev stand
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Account:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            properties:
+              accountNumber:
+                type: string
+                example: "40802810823200003298"
+                description: Номер счёта клиента
+            required:
+              - accountNumber
+
+    DebitCardProduct:
+      type: object
+      properties:
+        card_credentials:
+          type: array
+          items:
+            type: object
+            properties:
+              card_number_masked:
+                type: string
+                example: "220100******1234"
+                description: Маскированный номер карты
+              expiration_date:
+                type: string
+                format: date
+                example: "09/22"
+                description: Срок действия карты
+        card_products:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "ЛибертиКарта"
+                description: Название карты
+        card_orders:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "PROCESSING"
+                description: Статус заказа на карту
+      required:
+        - card_credentials
+        - card_products
+        - card_orders
+
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-04-06T12:34:56Z"
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "NOT_FOUND"
+        message:
+          type: string
+          example: "Страница не найдена."
+        path:
+          type: string
+          example: "/card/api/v1/card-orders"
+
+paths:
+  /card/api/v1/card-orders:
+    get:
+      summary: Получить список дебетовых карт клиента
+      operationId: getDebitCardsByCustomerId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "710c624e-4332-45ee-8351-5d2771336b36"
+          description: Идентификатор клиента
+      responses:
+        '200':
+          description: Успешный ответ. Возвращён список дебетовых карт.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  debitCardProducts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DebitCardProduct'
+        '401':
+          description: Ошибка авторизации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "UNAUTHORIZED"
+                message: "Требуется авторизация" 
+        '403':
+          description: Доступ запрещен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "FORBIDDEN"
+                message: "У вас нет прав на выполнение этой операции" 
+        '404':
+          description: Счет или данные по клиенту не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "NOT FOUND"
+                message: "Страница не найдена."
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "INTERNAL SERVER ERROR"
+                message: "Сервис временно недоступен. Повторите попытку позже."
+
+  /account/api/v1/accounts:
+    get:
+      summary: Получить список счетов клиента
+      operationId: getAccountsByCustomerId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+          description: Идентификатор клиента
+      responses:
+        '200':
+          description: Успешный ответ. Возвращён список счетов клиента.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          description: Ошибка авторизации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "UNAUTHORIZED"
+                message: "Требуется авторизация" 
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error" 
+              example:
+                error: "FORBIDDEN"
+                message: "У вас нет прав на выполнение этой операции" 
+        '404':
+          description: Счет или данные по клиенту не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "NOT FOUND"
+                message: "Страница не найдена."
+        '500':
+          description: Сервис временно недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "INTERNAL SERVER ERROR"
+                message: "Сервис временно недоступен. Повторите попытку позже."

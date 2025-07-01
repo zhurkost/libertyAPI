@@ -1,0 +1,151 @@
+openapi: 3.0.0
+info:
+  title: Поиск клиента
+  description: >-
+    Эндпоинт описывает процесс поиска клиента.
+    Необходимо получить данные о клиенте из DB-Customer (таблиц customers и passports).
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.97:30005'
+paths:
+  /api/v1/customers:
+    post:
+      summary: Поиск клиента по паспортным данным
+      tags: 
+        - Customers
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                snPassport:
+                  type: string
+                  description: Серия и номер паспорта клиента
+                  example: "1234561111"
+              required:
+                - snPassport
+      responses:
+        '200':
+          description: Успешный ответ с найденным клиентом
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/customer"
+        '400':
+          description: Ошибка загрузки данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 400
+                  error: BAD REQUEST
+                  path: /api/v1/customers
+        '401':
+          description: Ошибка авторизации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 401
+                  error: UNAUTHORIZED
+                  path: /api/v1/customers
+        '403':
+          description: Отсутствие прав доступа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 403
+                  error: FORBIDDEN
+                  path: /api/v1/customers
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 404
+                  error: NOT FOUND
+                  path: /api/v1/customers
+        '500':
+          description: Ошибка загрузки данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                  timestamp: 2025-02-04T09:50:05Z
+                  status: 500
+                  error: INTERNAL SERVER ERROR
+                  path: /api/v1/customers
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    customer:
+      type: object
+      required:
+       - customersId
+       - customerStatus
+       - lastName
+       - firstName
+       - patronymic
+       - snPassport
+      properties: 
+        customersId:
+          type: string
+          example: 4f1c2d52-8a6e-4b6a-9b8a-2a4f7e3c9d12
+        customerStatus:
+          type: string
+          enum:
+            - active
+            - archive
+            - blocked
+        lastName:
+          type: string
+          example: Иванов
+        firstName:
+          type: string
+          example: Иван
+        patronymic:
+          type: string
+          example: Иванович
+        snPassport:
+          type: string
+          example: 1234561111
+    error:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - path
+      properties:
+        timestamp:
+          type: string
+          example: временная метка
+        status:
+          type: integer
+          example: код состояния HTTP
+        error:
+          type: string
+          example: пояснение к коду состояния
+        path:
+          type: string
+          example: путь к EP
+ 

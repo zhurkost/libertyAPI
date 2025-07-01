@@ -1,0 +1,149 @@
+openapi: 3.0.0
+info:
+  title: MGR US 2. Изменение пароля сотрудника
+  description: >-
+    Эндпоинт описывает изменение пароля сотрудника. 
+    Необходимо частично обновить учетные данные сотрудника (пароль) в DB Employee auth.
+  version: 0.0.1
+servers:
+  - url: 'http://172.17.1.97:30050/api/v1'
+    description: dev stand
+paths:
+  /employee-auth/changePassword:
+    patch:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Авторизация
+      requestBody:
+        required: true   
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/changeRequest'        
+      summary: Изменение пароля сотрудника
+      description: >-
+        Успешный ответ c сообщением об изменении пароля
+      responses:
+        '200':
+          description: >-
+            Успешный ответ c сообщением об изменении пароля
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/changeResponse'
+       
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                timestamp: "2024-09-03T09:50:05Z"
+                status: 500
+                error: INTERNAL SERVER ERROR
+                message: "Что-то пошло не так. Повторите попытку позже"
+                path: "/employee-auth/api/v1/employee-auth/changePassword"
+
+        '401':
+          description: Невалидный токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                timestamp: "2024-09-03T09:50:05Z"
+                status: 401
+                error: UNAUTHORIZED
+                message: "Ошибка авторизации"
+                path: "/employee-auth/api/v1/employee-auth/changePassword"
+        '403':
+          description: Введен неверный текущий пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                timestamp: "2024-09-03T09:50:05Z"
+                status: 403
+                error: UNAUTHORIZED
+                message: "Неверный текущий пароль"
+                path: "/employee-auth/api/v1/employee-auth/changePassword"
+        '409':
+          description: Пароль совпадает с тем, который использовался ранее
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                timestamp: "2024-09-03T09:50:05Z"
+                status: 409
+                error: CONFLICT
+                message: "Пароль уже использовался ранее"
+                path: "/employee-auth/api/v1/employee-auth/changePassword"
+                
+components:
+  schemas:
+     changeRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          example: "OldPassword123!"
+          description: Текущий пароль сотрудника
+        newPassword:
+          type: string
+          example: "SecurePassword123!"
+          description: Новый пароль сотрудника 
+      required:
+        - currentPassword
+        - newPassword 
+     changeResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: Флаг успешного выполнения
+        message:
+          type: string
+          example: Пароль успешно изменен
+          description: Человекочитаемое сообщение
+
+
+     error:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: timestamptz
+          description: Временная метка 
+        status:
+          type: string
+          description: Код состояния HTTP          
+        error:
+          type: string
+          description: Пояснение к коду состояния         
+        message:
+          type: string
+          description: Сообщение об ошибке
+        path:
+          type: string
+          description: Путь к EP  
+     
+  securitySchemes:
+      bearerAuth:
+       type: http
+       scheme: bearer
+       bearerFormat: JWT     

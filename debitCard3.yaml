@@ -1,0 +1,526 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-5 US-1 Оформление дебетовой карты
+  description: >-
+    API предназначен для работы с оформлением дебетовых карт. 
+    Содержит эндпоинты для получения информации о доступных продуктах, 
+    дополнительных услугах, текущих счетах клиента, а также для оформления карты.
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.70:30040/api/v1'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: card
+    description: Операции с картами
+  - name: account
+    description: Операции со счетами
+  - name: customer
+    description: Операции с клиентами
+paths:
+  /customers/{id}:
+    get:
+      tags: 
+        - customer
+      summary: получить информацию по клиенту
+      description: Возвращает информацию по клиенту.
+      parameters:
+        - name: id
+          in: path
+          description: выбор клиента по uuid
+          required: true
+          schema:
+            type: string
+          example: d0e63be2-6bdd-4b74-97ab-19e76f5a78b2
+      responses:
+        '200':
+          description: информация по клиенту
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/customer" 
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+                    
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+  /documents/api/v1/document:
+    post:
+      tags:
+        - document
+      summary: Загрузить документ
+      description: Загружает документ в систему с привязкой к аккаунту и карте.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF-документ для загрузки
+                metadata:
+                  type: object
+                  description: json содержащий accountId и cardId
+                  properties:
+                    accountId:
+                      type: string
+                      format: uuid
+                      example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+                    cardId:
+                      type: string
+                      format: uuid
+                      example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+      responses:
+        '200':
+          description: Документ успешно загружен
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "Отсутствует файл или метаданные"
+                    path: "/api/v1/document:"
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/document"
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/document"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/document"
+  /debit-card:
+    post:
+      tags:
+        - card
+      summary: оформить дебетовую карту клиенту
+      description: Создает новую дебетовую карту для клиента.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                  description: Идентификатор клиента
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+                cardProductId:
+                  type: string
+                  description: Идентификатор дебетового карточного продукта
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+                currentAccountId:
+                  type: string
+                  description: Идентификатор текущего счета клиента
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+                serviceIds:
+                  type: array
+                  default: []
+                  items:
+                    type: string
+                  description: |
+                    Подключаемые дополнительные услуги. Если пустой массив - то услуги не подключаются.
+                  example: ["d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"]
+              required:
+                - customerId
+                - cardProductId
+                - currentAccountId
+                - serviceIds
+      responses:
+        '201':
+          description: Успешное создание дебетовой карты клиента
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  credentialsId:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                  cardId:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                  cardNumberMasked:
+                    type: string
+                    example: '220100******1234'
+                  cardNumberEncrypted:
+                    type: string
+                    example: '8f2a6c4e8d3d52a4999a0db65a6fc4a7c72e0e3bcbfd32f7a20366cd4a73fd95'
+                  cardHolder:
+                    type: string
+                    example: 'ALEKSANDR IVANOV'
+                  expirationDate:
+                    type: string
+                    example: '09/26'
+                  customerId:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                  customerFirstName:
+                    type: string
+                    example: 'Александр'
+                  customerLastName:
+                    type: string
+                    example: 'Иванов'
+                  customerPatronymic:
+                    type: string
+                    nullable: true
+                    example: 'Петрович'
+                  accountId:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                required:
+                  - credentialsId
+                  - cardId
+                  - cardNumberMasked
+                  - cardNumberEncrypted
+                  - cardHolder
+                  - expirationDate
+                  - customerId
+                  - customerFirstName
+                  - customerLastName
+                  - accountId
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/debit-card"
+                    
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/debit-card"
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/debit-card"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/debit-card"
+  /account-card:
+    post:
+      tags:
+        - account
+      summary: привязать карту к текущему счету
+      description: связывает карту с текущим счетом.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accountId:
+                  type: string
+                  description: Идентификатор счета
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+                cardId:
+                  type: string
+                  description: Идентификатор карты
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+              required:
+                - accountId
+                - cardId
+      responses:
+        '201':
+          description: Успешная привязка карты к текущему счету
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                  accountId:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                  cardId:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                required:
+                  - id
+                  - accountId
+                  - cardId
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/account-card"
+                    
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/account-card"
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/account-card"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/account-card"
+components:
+  schemas:
+    customer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        firstName:
+          type: string
+          example: 'Александр'
+        lastName:
+          type: string
+          example: 'Иванов'
+        patronymic:
+          type: string
+          nullable: true
+          example: 'Петрович'
+        email:
+          type: string
+          example: 'ivanovivan@gmail.com'
+        birthDate:
+          type: string
+          example: '1989-05-13'
+        phoneNumber:
+          type: string
+          example: '78005553535'
+        passportId:
+          type: integer
+          example: 4215362958
+        addressRegId:
+          type: integer
+          example: 321
+        addressFactId:
+          type: integer
+          example: 321
+        customerStatus:
+          type: string
+          example: 'active'
+        inn:
+          type: string
+          example: '123456789123'
+        snils:
+          type: string
+          example: '123-456-789 01'
+      required:
+        - id
+        - firstName
+        - lastName
+        - patronymic
+        - email
+        - birthDate
+        - phoneNumber
+        - passportId
+        - addressRegId
+        - addressFactId
+        - customerStatus
+        - inn
+        - snils
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-09-03T09:50:05Z"
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "INTERNAL SERVER ERROR"
+        message:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+        path:
+          type: string
+          example: "/api/v1/card-products"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

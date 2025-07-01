@@ -1,0 +1,72 @@
+openapi: 3.0.0
+info:
+  title: MGR US 2. Активация карты
+  description: >-
+        Сервис по работе с картами.
+  version: 0.0.1
+servers:
+  - url: 'http://114.69.3.23:88891/api/v1'
+    description: sandbox
+paths:
+  /cards/status/activate:
+    patch:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Авторизация
+      requestBody:
+        required: true   
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/changeCardStatus'        
+      summary: Установка статуса карты "Активна"
+      description: >-
+        Смена статуса карты из списка дебетовых карт клиента на "Активна"
+      responses:
+        '200':
+          description: >-
+            Успешная установка статуса карты
+       
+
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                error: INTERNAL SERVER ERROR
+                message: "Unsuccessful operation. Try later"
+                
+components:
+  schemas:
+     changeCardStatus:
+      type: object
+      properties:
+        cardId:
+          type: string
+          example: "b5f355b3-c3fe-42c9-a759-b5dce7c2ea7c"
+          description: Номер обновляемой карты в базе 
+      required:
+        - cardId
+     
+
+
+     error:
+      type: object
+      required:
+        - error
+        - message
+      properties:      
+        error:
+          type: string
+          description: Пояснение к коду состояния         
+        message:
+          type: string
+          description: Сообщение об ошибке  
+  securitySchemes:
+      bearerAuth:
+       type: http
+       scheme: bearer
+       bearerFormat: JWT

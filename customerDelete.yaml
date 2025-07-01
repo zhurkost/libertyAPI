@@ -1,0 +1,176 @@
+openapi: 3.0.3
+info:
+  title: Архивация клиента
+  version: 1.0.4
+  description: >
+    Эндпоинт архивирует карточку клиента при отсутствии активных продуктов.
+    Проверка токена авторизации выполняется на API Gateway.
+
+paths:
+  /client/api/v1/customers/delete:
+    patch:
+      summary: Архивация клиента
+      operationId: archiveCustomer
+      tags:
+        - Customer
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customerId
+              properties:
+                customerId:
+                  type: string
+                  format: uuid
+                  description: Уникальный идентификатор клиента
+                  example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Клиент успешно архивирован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Клиент успешно архивирован
+                  id:
+                    type: string
+                    format: uuid
+                    example: 123e4567-e89b-12d3-a456-426614174000
+                  customer_status:
+                    type: string
+                    example: archive
+        '400':
+          description: Некорректный статус клиента
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2025-06-04T14:45:00Z
+                  status:
+                    type: integer
+                    example: 400
+                  error:
+                    type: string
+                    example: "BAD REQUEST"
+                  message:
+                    type: string
+                    example: "Некорректный статус: значение должно быть 'archive'"
+                  path:
+                    type: string
+                    example: "/client/api/v1/customers/delete"
+        '403':
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2025-06-04T14:46:10Z
+                  status:
+                    type: integer
+                    example: 403
+                  error:
+                    type: string
+                    example: "FORBIDDEN"
+                  message:
+                    type: string
+                    example: "Необходима авторизация"
+                  path:
+                    type: string
+                    example: "/client/api/v1/customers/delete"
+        '404':
+          description: Клиент не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2025-06-04T14:47:22Z
+                  status:
+                    type: integer
+                    example: 404
+                  error:
+                    type: string
+                    example: "NOT FOUND"
+                  message:
+                    type: string
+                    example: "Клиент с ID = 123e4567-e89b-12d3-a456-426614174000 не существует"
+                  path:
+                    type: string
+                    example: "/client/api/v1/customers/delete"
+        '409':
+          description: У клиента есть активные банковские продукты
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2025-06-04T14:48:37Z
+                  status:
+                    type: integer
+                    example: 409
+                  error:
+                    type: string
+                    example: "CONFLICT"
+                  message:
+                    type: string
+                    example: "У клиента есть активные продукты"
+                  path:
+                    type: string
+                    example: "/client/api/v1/customers/delete"
+        '500':
+          description: Внутренняя ошибка сервиса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2025-06-04T14:49:51Z
+                  status:
+                    type: integer
+                    example: 500
+                  error:
+                    type: string
+                    example: "INTERNAL SERVER ERROR"
+                  message:
+                    type: string
+                    example: "Сервис временно недоступен. Повторите попытку позже"
+                  path:
+                    type: string
+                    example: "/client/api/v1/customers/delete"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+

@@ -1,0 +1,169 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-4 US-2 Просмотр счетов
+  description: API предназначен для просмотра кредитных карточных продуктов клиента
+  version: 1.0.0
+servers:
+  - url: http://172.17.1.70:30040/api/v1
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: cards
+    description: Просмотр кредитных карточных продуктов
+paths:
+  /creditcard/cards:
+    get:
+      tags:
+        - cards
+      summary: получить список всех кредитных карточных продуктов клиента
+      description: возвращает список кредитных карточных продуктов
+      parameters:
+        - name: customerId
+          in: query
+          description: уникальный идентификатор клиента по которому делается выборка
+          required: true
+          schema:
+            type: string
+          example: d0e63be2-6bdd-4b74-97ab-19e76f5a78b2
+      responses:
+        '200':
+          description: список кредитных карточных продуктов клиента
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  creditCards:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/cardProducts'
+        '401':
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  value:
+                    uri: /api/v1/creditcard/cards
+                    statusCode: 401
+                    errorMessage: Требуется авторизация
+                    timestamp: '2024-09-03T09:50:05Z'
+                    error: "UNAUTHORIZED"
+        '403':
+          description: Недостаточно прав
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  value:
+                    uri: /api/v1/creditcard/cards
+                    statusCode: 403
+                    errorMessage: Недостаточно прав
+                    timestamp: '2024-09-03T09:50:05Z'
+                    error: "FORBIDDEN"
+  
+  /credits/internal:
+    get:
+      tags:
+        - credits
+      summary: получить список всех кредитных продуктов клиента
+      description: возвращает массив кредитных продуктов клиента
+      parameters:
+        - name: customerId
+          in: query
+          description: уникальный идентификатор клиента
+          required: true
+          schema:
+            type: string
+          example: d0e63be2-6bdd-4b74-97ab-19e76f5a78b2
+      responses:
+        '200':
+          description: список уникальных идентификаторов кредитных счетов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  creditAccounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/credits'
+components:
+  schemas:
+    cardProducts:
+      type: object
+      properties:
+        cardNumberMasked:
+          type: string
+          example: "220100******1234"
+        name:
+          type: string
+          example: ЛибертиКарта
+        cardStatus:
+          type: string
+          example: Активна
+        expirationDate:
+          type: string
+          example: 07.27
+        accountNumber:
+          type: string
+          example: 40802810823200003298
+      required:
+        - name
+        - cardStatus
+        - expirationDate
+        - accountNumber
+        - cardNumberMasked
+
+    credits:
+      type: object
+      properties:
+        id:
+          type: string
+          example: d0e63be2-6bdd-4b74-97ab-19e76f5a78b2
+        number:
+          type: string
+          example: 40802810823200003298
+        cardId:
+          type: string
+          example: d0e63be2-6bdd-4b74-97ab-19e76f5a78b2
+      required:
+        - id
+        - number
+        - cardId
+
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-09-03T09:50:05Z"
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "INTERNAL SERVER ERROR"
+        message:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+        path:
+          type: string
+          example: "/api/v1/card-products"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

@@ -1,0 +1,98 @@
+  # main.yaml
+  openapi: 3.0.0
+  info:
+    title: Combined API
+    version: 1.0.0
+  security:
+  - bearerAuth: []
+  paths:
+    /api/v1/account-types:
+      $ref: './accountAdd.yaml#/paths/~1api~1v1~1account-types'
+    /api/v1/accounts:
+        $ref: './accountAdd.yaml#/paths/~1api~1v1~1accounts~1'
+    /api/card-products(fromAccountAdd):
+      $ref: './accountAdd.yaml#/paths/~1api~1card-products'
+    /api/card-services(fromAccountAdd):
+      $ref: './accountAdd.yaml#/paths/~1api~1card-services'
+    /api/debit-card(fromAccountAdd):
+      $ref: './accountAdd.yaml#/paths/~1api~1debit-card'
+    /customers/{id}/details:
+      $ref: './accountAdd.yaml#/paths/~1customers~1{id}~1details'
+    /api/v1/accounts(fromAccountView):
+      $ref: './accountView.yaml#/paths/~1api~1v1~1accounts'
+    /cards/status/activate:
+      $ref: './cardActivate.yaml#/paths/~1cards~1status~1activate'
+    /creditcard/cards:
+      $ref: './creditCardViewList.yaml#/paths/~1creditcard~1cards'
+    /credits/internal:
+      $ref: './creditCardViewList.yaml#/paths/~1credits~1internal'
+    /customer/api/v1/customers:
+      $ref: './customerAdd.yaml#/paths/~1customer~1api~1v1~1customers'
+    /customer/api/v1/customers/{id}:
+      $ref: './customerDetails.yaml#/paths/~1customer~1api~1v1~1customers~1{id}'
+    /customer/api/v1/employment-details/{customerId}:
+      $ref: './customerDetails.yaml#/paths/~1customer~1api~1v1~1employment-details~1{customerId}'
+    /api/v1/customers:
+      $ref: './customerSearch.yaml#/paths/~1api~1v1~1customers'
+    /card-products:
+      $ref: './debitCard1.yaml#/paths/~1card-products'
+    /card-services:
+      $ref: './debitCard1.yaml#/paths/~1card-services'
+    /accounts:
+      $ref: './debitCard1.yaml#/paths/~1accounts'
+    /customers/{id}/details(fromAddDebitCard):
+      $ref: './debitCard2.yaml#/paths/~1customers~1{id}~1details'
+    /customers/{id}:
+      $ref: './debitCard3.yaml#/paths/~1customers~1{id}'
+    /documents/api/v1/document:
+      $ref: './debitCard3.yaml#/paths/~1documents~1api~1v1~1document'
+    /debit-card:
+      $ref: './debitCard3.yaml#/paths/~1debit-card'
+    /account-card:
+      $ref: './debitCard3.yaml#/paths/~1account-card'
+    /api/v1/cards/{cardId}:
+      $ref: './debitCardView.yaml#/paths/~1api~1v1~1cards~1{cardId}'
+    /api/v1/accounts/{accountId}:
+      $ref: './debitCardView.yaml#/paths/~1api~1v1~1accounts~1{accountId}'
+    /card/api/v1/card-orders:
+      $ref: './debitCardViewList.yaml#/paths/~1card~1api~1v1~1card-orders'
+    /account/api/v1/accounts:
+      $ref: './debitCardViewList.yaml#/paths/~1account~1api~1v1~1accounts'
+    /departments:
+      $ref: './employeeAdd.yaml#/paths/~1departments'
+    /positions: 
+      $ref: './employeeAdd.yaml#/paths/~1positions'  
+    /bank-addresses:
+      $ref: './employeeAdd.yaml#/paths/~1bank-addresses'
+    /employee:
+      $ref: './employeeAdd.yaml#/paths/~1employee'
+    /employee-auth:
+      $ref: './employeeAdd.yaml#/paths/~1employee-auth'
+    /auth/api/v1/login:
+      $ref: './employeeAuth.yaml#/paths/~1auth~1api~1v1~1login'
+    /client/api/v1/customers/delete:
+      $ref: './customerDelete.yaml#/paths/~1client~1api~1v1~1customers~1delete'
+    /employee-auth/changePassword:
+      $ref: './employeePassChange.yaml#/paths/~1employee-auth~1changePassword'
+    /bank-addresses/profile-view/{bankAddressId}:
+      $ref: './employeeProfile.yaml#/paths/~1bank-addresses~1profile-view~1{bankAddressId}'
+    /employee-accounts/with-last-login:
+      $ref: './employeeProfile.yaml#/paths/~1employee-accounts~1with-last-login'
+    /employees/{employeeId}:
+      $ref: './employeeProfile.yaml#/paths/~1employees~1{employeeId}'
+    /employee-manage-service/profiles/{employeeId}:
+      $ref: './employeeProfile.yaml#/paths/~1employee-manage-service~1profiles~1{employeeId}'
+    /api/v1/notifications/{customerId}:
+      $ref: './notificationChangePass.yaml#/paths/~1api~1v1~1notifications~1{customerId}'
+    /api/v1/notifications/{notification_id}:
+      $ref: './notificationChangePass.yaml#/paths/~1api~1v1~1notifications~1{notification_id}'
+    /accounts(fromTransfer):
+      $ref: './transferAccToAcc.yaml#/paths/~1accounts'
+    /transfer:
+      $ref: './transferAccToAcc.yaml#/paths/~1transfer'
+    /account:
+      $ref: './transferAccToAcc.yaml#/paths/~1account'
+    /transaction:
+      $ref: './transferAccToAcc.yaml#/paths/~1transaction'
+    /hold-balance:
+      $ref: './transferAccToAcc.yaml#/paths/~1hold-balance'

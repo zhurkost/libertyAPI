@@ -1,0 +1,608 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-3 US-1 Добавление нового сотрудника
+  description: >-
+    API предназначен для работы с регистрацией нового сотрудника. 
+    Содержит эндпоинты для получения информации о доступных подразделениях, 
+    должностях, адресах офисов, добавления нового сотрудника и аккаунта в 
+    системе.
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.70:30040'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: info
+    description: Операции с инфо сервисом  
+  - name: employee
+    description: Операции с сотрудниками  
+  - name: employee-auth
+    description: Операции с аккаунтами
+paths:
+  /departments:
+    get:
+      tags: 
+        - employee
+      summary: получить список названий подразделений банка
+      description: Возвращает массив названий подразделений банка.
+      responses:
+        '200':
+          description: список подразделений банка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  departments:
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/department" 
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/departments"                    
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/departments"                 
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/departments"                                 
+  /positions:
+    get:
+      tags: 
+        - employee
+      summary: получить список названий должностей
+      description: Возвращает массив названий должностей
+      responses:
+        '200':
+          description: список должностей
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  positions:
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/position" 
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/positions"                     
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/positions"                           
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/positions"                                  
+  /bank-addresses:
+    get:
+      tags: 
+        - info
+      summary: получить список адресов офисов банка
+      description: Возвращает массив адресов офисов банка
+      responses:
+        '200':
+          description: список адресов офисов банка
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bank-addresses:
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/bankAddress" 
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/bankAddress"                                   
+  /employee:
+    post:
+      tags:
+        - employee
+      summary: зарегистрировать нового сотрудника в системе
+      description: Создает нового сотрудника в системе.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  description: имя сотрудника
+                  example: "Алексей"
+                lastName:
+                  type: string
+                  description: фамилия сотрудника
+                  example: "Иванов"
+                pantronymic:
+                  type: string
+                  description: отчество сотрудника
+                  nullable: true
+                  example: "Васильевич"
+                birthday:
+                  type: string
+                  description: |
+                    дата в формате DD.MM.YYYY.
+                  example: "17.08.1999"
+                phoneNumber:
+                  type: string
+                  description: телефонный номер сотрудника
+                  example: "+79996661100"  
+                email:
+                  type: string
+                  description: электронная почта сотрудника
+                  example: "leha12@gmail.com"  
+                bankAddressId:
+                  type: string
+                  description: идентификатор адреса офиса
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"  
+                departmentId:
+                  type: string
+                  description: идентификатор подразделения
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"  
+                positionId:
+                  type: string
+                  description: идентификатор должности
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"      
+              required:
+                - firstName
+                - lastName
+                - pantronymic
+                - birthday
+                - phoneNumber
+                - email
+                - bankAddressId
+                - departmentId
+                - positionId
+      responses:
+        '201':
+          description: Успешное добавление нового сотрудника
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                  firstName:
+                    type: string
+                    description: имя сотрудника
+                    example: "Алексей"
+                  lastName:
+                    type: string
+                    description: фамилия сотрудника
+                    example: "Иванов"
+                  pantronymic:
+                    type: string
+                    description: отчество сотрудника
+                    nullable: true
+                    example: "Васильевич"
+                  birthday:
+                    type: string
+                    description: |
+                      дата в формате DD.MM.YYYY.
+                    example: "17.08.1999"
+                  phoneNumber:
+                    type: string
+                    description: телефонный номер сотрудника
+                    example: "+79996661100"  
+                  email:
+                    type: string
+                    description: электронная почта сотрудника
+                    example: "leha12@gmail.com"    
+                  status:
+                    type: string
+                    description: статус сотрудника
+                    example: "ACTIVE"  
+                  bankAddressId:
+                    type: string
+                    description: идентификатор адреса офиса
+                    example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"  
+                  departmentId:
+                    type: string
+                    description: идентификатор подразделения
+                    example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"  
+                  positionId:
+                    type: string
+                    description: идентификатор должности
+                    example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"   
+                  corpEmail:
+                    type: string
+                    description: электронная почта (логин) аккаунта
+                    example: "a.ivanov@libertybank.ru"    
+                required:
+                  - firstName
+                  - lastName
+                  - pantronymic
+                  - birthday
+                  - phoneNumber
+                  - email
+                  - status
+                  - bankAddressId
+                  - departmentId
+                  - positionId
+                  - corpEmail
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/employee" 
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/employee"       
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/employee"     
+        '409':
+          description: "сотрудник уже существует"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"  
+                    status: 409
+                    error: "CONFLICT"
+                    message: "сотрудник уже существует!"
+                    uri: "/api/v1/employee"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/employee"      
+  /employee-auth:
+    post:
+      tags:
+        - employee-auth
+      summary: создать аккаунт нового сотрудника в системе
+      description: создает нового аккаунта сотрудника в системе.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                employeeId:
+                  type: string
+                  description: идентификатор сотрудника
+                  example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+                firstName:
+                  type: string
+                  description: имя сотрудника
+                  example: "Алексей"
+                lastName:
+                  type: string
+                  description: фамилия сотрудника
+                  example: "Иванов"
+              required:
+                - id
+                - firstName
+                - lastName
+      responses:
+        '201':
+          description: Успешное создание нового аккаунта для сотрудника
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: идентификатор аккаунта
+                    example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+                  corpEmail:
+                    type: string
+                    description: электронная почта (логин) аккаунта
+                    example: "a.ivanov@libertybank.ru"
+                  role:
+                    type: string
+                    description: роль аккаунта в системе
+                    nullable: true
+                    example: "OPERATOR"
+                  createdAt:
+                    type: string
+                    description: дата и время создания с тайм-зоной
+                    example: "2025-10-19 10:23:54+02"
+                  status:
+                    type: string
+                    description: статус аккаунта
+                    example: "CREATED"  
+                  employeeId:
+                    type: string
+                    description: идентификатор сотрудника, к которому привязан аккаунт
+                    example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"    
+                required:
+                  - id
+                  - corpEmail
+                  - role
+                  - createdAt
+                  - status
+                  - employeeId
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/employee-auth" 
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/employee-auth"     
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/employee-auth"     
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже"
+                    path: "/api/v1/employee-auth"      
+components:
+  schemas:
+    department:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        name:
+          type: string
+          example: 'отдел кредитования'
+      required:
+        - id
+        - name
+    position:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        name:
+          type: string
+          example: 'Операционист'
+      required:
+        - id
+        - name
+    bankAddress:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        countyName:
+          type: string
+          example: 'Центральный федеральный округ'
+        cityName:
+          type: string
+          example: 'Москва'
+        streetType:
+          type: string
+          example: 'улица'
+        streetTypeShort:
+          type: string
+          example: 'ул.'        
+        street:
+          type: string
+          example: 'Энтузиастов'
+        streetEn:
+          type: string
+          example: 'Entuziastov'
+        house:
+          type: string
+          example: '5 к.1'
+        houseEn:
+          type: string
+          example: '5 bldg.1'
+        latitude:
+          type: number
+          example: 55.746481
+        longitude:
+          type: number
+          example: 37.682619
+        metroStation:
+          type: string
+          example: 'Пушкинская'
+          nullable: true
+      required:
+        - id
+        - countyName
+        - cityName
+        - streetType
+        - streetTypeShort
+        - street
+        - streetEn
+        - house
+        - houseEn
+        - latitude
+        - longitude
+        - metroStation
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-09-03T09:50:05Z"
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "INTERNAL SERVER ERROR"
+        message:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+        path:
+          type: string
+          example: "/api/v1/card-products"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path 
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

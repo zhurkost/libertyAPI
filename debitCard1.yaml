@@ -1,0 +1,421 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-5 US-1 Оформление дебетовой карты
+  description: >-
+    API предназначен для работы с оформлением дебетовых карт. 
+    Содержит эндпоинты для получения информации о доступных продуктах, 
+    дополнительных услугах, текущих счетах клиента.
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.70:30040/api/v1'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: card
+    description: Операции с картами
+  - name: account
+    description: Операции со счетами
+paths:
+  /card-products:
+    get:
+      security: []
+      tags: 
+        - card
+      summary: получить список названий активных дебетовых карточных продуктов
+      description: Возвращает массив названий активных дебетовых карточных продуктов.
+      parameters:
+        - name: cardType
+          in: query
+          description: фильтрация по типу дебетового карточного продукта
+          required: false
+          schema:
+            type: string
+          example: 'DEBIT'
+        - name: isActive
+          in: query
+          description: фильтрация по статусу дебетового карточного продукта
+          required: false
+          schema:
+            type: boolean
+          example: true
+      responses:
+        '200':
+          description: список карточных продуктов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cardProducts:
+                    type: array
+                    items: 
+                      $ref: "#/components/schemas/cardProduct"  
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/card-products"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/card-products"
+  /card-services:
+    get:
+      tags: 
+        - card
+      summary: получить список дополнительных услуг
+      description: Возвращает массив с дополнительными услугами.
+      parameters:
+        - name: isActive
+          in: query
+          description: фильтрация по статусу дополнительной услуги
+          required: false
+          schema:
+            type: boolean
+          example: true
+      responses:
+        '200':
+          description: список дополнительных услуг
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: 
+                  services:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/service" 
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/card-services"
+                    
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/card-services"
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/card-services"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/card-services"                                                    
+  /accounts:
+    get:
+      tags: 
+        - account
+      summary: получить список текущих счетов
+      description: Возвращает массив с текущими счетами.
+      parameters: 
+        - name: customerId
+          in: query
+          required: false
+          description: фильтрация по идентификатору клиента
+          schema:
+            type: string
+          example: 'd0e63be2-6bdd-4b74-97ab-19e76f5a78b2'
+        - name: isActive
+          in: query
+          required: false
+          description: фильтрация по статусу счета
+          schema:
+            type: boolean
+          example: true
+      responses:
+        '200':
+          description: список текущих счетов 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentAccounts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/currentAccount" 
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/accounts"
+                    
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/accounts"
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/accounts" 
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/accounts"                                               
+components:
+  schemas:
+    service:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        type:
+          type: string
+          example: "SMS"
+        name:
+          type: string
+          example: 'СМС-информирование'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - type
+        - name
+        - isActive
+    cardProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        tariffId:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2" 
+        name:
+          type: string
+          example: 'ЛибертиКарта'
+        description:
+          type: string
+          example: 'универсальная карта, которая подойдет всем'
+        cardType:
+          type: string
+          example: 'DEBIT'
+        currency:
+          type: string
+          example: 'RUB'
+        paymentSystem:
+          type: string
+          example: 'MIR'
+        expiration:
+          type: integer
+          example: 36
+        createdAt:
+          type: string
+          example: '2025-10-19 10:23:54+02'
+        createdBy:
+          type: string
+          example: 'b5f355b3-c3fe-42c9-a759-b5dce7c2ea7c'
+        deletedAt:
+          type: string
+          example: '2025-10-19 10:23:54+02'
+          nullable: true
+        deletedBy:
+          type: string
+          example: 'b5f355b3-c3fe-42c9-a759-b5dce7c2ea7c'
+          nullable: true
+        isActive:
+          type: boolean
+          example: true
+        cardImageLink:
+          type: string
+          example: 'https://i.ibb.co/b0WWP1t/image.png'
+        slogan:
+          type: string
+          example: 'Максимум выгоды за покупки в любимых супермаркетах'
+        creditLimit:
+          type: number
+          example: 48000.00
+          nullable: true
+      required:
+        - id
+        - name
+        - description
+        - cardType
+        - currency
+        - paymentSystem
+        - expiration
+        - createdAt
+        - createdBy
+        - deletedAt
+        - deletedBy
+        - isActive
+        - cardImageLink
+        - slogan
+        - creditLimit
+    currentAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        number:
+          type: string
+          example: "40802810800000003298"
+        customerId:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        accountTypeId:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        isActive:
+          type: boolean
+          example: true
+        balanceId:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        openDate:
+          type: string
+          example: "2021-12-28"
+        closeDate:
+          type: string
+          nullable: true
+          example: null
+        autoPayments:
+          type: boolean
+          example: true
+        internetBanking:
+          type: boolean
+          example: true
+      required:
+        - id
+        - number
+        - customerId
+        - accountTypeId
+        - isActive
+        - balanceId
+        - openDate
+        - closeDate
+        - autoPayments
+        - internetBanking
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-09-03T09:50:05Z"
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "INTERNAL SERVER ERROR"
+        message:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+        path:
+          type: string
+          example: "/api/v1/card-products"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

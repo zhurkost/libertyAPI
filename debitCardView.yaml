@@ -1,0 +1,185 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-5 US-4 Дебетовые карты. Просмотр конкретного карточного продукта
+  description: >-
+    API предназначен для работы с просмотром страницы конкретного карточного продукта
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.97:31010/api/v1'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: card
+    description: получение данных по карте
+  - name: account
+    description: получение данных по счёту
+paths:
+  /api/v1/cards/{cardId}:
+   get:
+     tags:
+       - card
+     summary: получить данные по конкретной дебетовой карте клиента
+     description: возвращает данные дебетовой карты клиента
+     parameters:
+       - name: cardId
+         in: path
+         description: уникальный идентификатор карты, по которому делается выборка
+         required: true
+         schema:
+           type: string
+         example: "b5f355b3-c3fe-42c9-a759-b5dce7c2ea7c"
+     responses:
+       '200':
+         description: данные дебетовой карты
+         content:
+           application/json:
+             schema:
+                     $ref: '#/components/schemas/card'
+       '500':
+         description: 'INTERNAL SERVER ERROR'
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/error'
+             examples:
+               internalServerError: 
+                 value:
+                   uri: "/api/v1/accounts" 
+                   statusCode: 500
+                   error: "INTERNAL SERVER ERROR"
+                   message: "INTERNAL SERVER ERROR"
+  /api/v1/accounts/{accountId}:
+   get:
+     tags:
+        - account
+     summary: получить данные счета, к которому привязана дебетовая карта клиента
+     description: возвращает данные счета
+     parameters:
+       - name: accountId
+         in: path
+         description: уникальный идентификатор счета, по которому делается выборка
+         required: true
+         schema:
+           type: string
+         example: "b5f355b3-c3fe-42c9-a759-b5dce7c2ea7c"
+     responses:
+       '200':
+         description: 'данные счета по дебетовой карте'
+         content:
+           application/json:
+             schema:
+               type: object
+               properties:
+                 accounts:
+                   type: array
+                   items:
+                     $ref: '#/components/schemas/account'
+       '500':
+         description: 'INTERNAL SERVER ERROR'
+         content:
+           application/json:
+             schema:
+               $ref: '#/components/schemas/error'
+             examples:
+               internalServerError: 
+                 value:
+                   uri: "/api/v1/accounts" 
+                   statusCode: 500
+                   error: "INTERNAL SERVER ERROR"
+                   message: "INTERNAL SERVER ERROR"
+components:
+  schemas:
+    card:
+      type: object
+      properties:
+        cardId:
+          type: string
+          example: "b5f355b3-c3fe-42c9-a759-b5dce7c2ea7c"
+        cardHolder:
+          type: string
+          example: "Aleksandr Ivanov"
+        cardnumber:
+          type: string
+          example: "220100******1234"
+        expirationDate:
+          type: string
+          example: "2027-07-26"
+        accountNumber:
+          type: string
+          example: "40802810823200003298"
+        status:
+          type: string
+          example: "ACTIVE"
+        creationDate:
+          type: string
+          example: "2024-07-26"
+        paymentSystem:
+          type: string
+          example: "Мир"
+        isActive:
+          type: boolean
+          example: "true"
+        balance:
+          type: string
+          example: "150000.00"
+        autoPayments:
+          type: boolean
+          example: "true"
+        currency:
+          type: string
+          example: "RUB" 
+      required:
+        - cardId
+        - cardHolder
+        - cardnumber
+        - expirationDate
+        - accountNumber
+        - status
+        - creationDate
+        - paymentSystem
+        - isActive
+        - balance
+        - autoPayments
+        - currency 
+    account:
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: "b5f355b3-c3fe-42c9-a759-b5dce7c2ea7c"
+        accountNumber:
+          type: string
+          example: "40802810823200003298"
+        balance:
+          type: string
+          example: "150000.00"
+        autoPayments:
+          type: boolean
+          example: "true"
+        currency:
+          type: string
+          example: "RUB" 
+      required:
+        - accountId
+        - accountNumber
+        - balance
+        - autoPayments
+        - currency
+    error:
+      type: object
+      required:
+        - error
+        - message
+      properties:      
+        error:
+          type: string
+          description: Пояснение к коду состояния         
+        message:
+          type: string
+          description: Сообщение об ошибке  
+  securitySchemes:
+      bearerAuth:
+       type: http
+       scheme: bearer
+       bearerFormat: JWT

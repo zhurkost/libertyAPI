@@ -1,0 +1,192 @@
+openapi: 3.0.0
+info:
+  title: MGR EP-5 US-1 Оформление дебетовой карты
+  description: >-
+    API предназначен для работы с информацией по клиенту. 
+  version: 1.0.0
+servers:
+  - url: 'http://172.17.1.70:30040/api/v1'
+    description: dev stand
+security:
+  - bearerAuth: []
+tags:
+  - name: customer
+    description: Операции с клиентами
+paths:
+  /customers/{id}/details:
+    get:
+      tags: 
+        - customer
+      summary: получить детальную информацию по клиенту
+      description: Возвращает информацию по клиенту для заполнения заявления на оформление продукта.
+      parameters:
+        - name: id
+          in: path
+          description: выбор клиента по uuid
+          required: true
+          schema:
+            type: string
+          example: d0e63be2-6bdd-4b74-97ab-19e76f5a78b2
+      responses:
+        '200':
+          description: информация по клиенту
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/detailedCustomer" 
+        '400':
+          description: "невалидный запрос"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 400
+                    error: "BAD REQUEST"
+                    message: "невалидный запрос"
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2/details"
+                    
+        '401':
+          description: "Требуется авторизация"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                unauthorized:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                      
+                    status: 401
+                    error: "UNAUTHORIZED"
+                    message: "Требуется авторизация"
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2/details"
+        '403':
+          description: "Доступ запрещен"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                forbidden:
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"
+                    status: 403
+                    error: "FORBIDDEN"
+                    message: "У вас нет прав на выполнение этой операции"
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2/details"
+        '500':
+          description: "внутренняя ошибка сервера"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                internalServerError: 
+                  value:
+                    timestamp: "2024-09-03T09:50:05Z"                                  
+                    status: 500
+                    error: "INTERNAL SERVER ERROR"
+                    message: "Внутренняя ошибка сервера. Повторите попытку позже."
+                    path: "/api/v1/customers/d0e63be2-6bdd-4b74-97ab-19e76f5a78b2/details"
+components:
+  schemas:
+    detailedCustomer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d0e63be2-6bdd-4b74-97ab-19e76f5a78b2"
+        firstName:
+          type: string
+          example: 'Иван'
+        lastName:
+          type: string
+          example: 'Иванов'
+        patronymic:
+          type: string
+          example: 'Иванович'
+        email:
+          type: string
+          example: 'ivanovivan@gmail.com'
+        birthDate:
+          type: string
+          example: '15.05.1990'
+        phoneNumber:
+          type: string
+          example: '78005553535'
+        snPassport:
+          type: string
+          example: '4215362958'
+        regAddress:
+          type: integer
+          example: 'г. Москва, ул. Ленина, д.10, кв.5'
+        factAddress:
+          type: integer
+          example: 'г. Москва, ул. Ленина, д.10, кв.5'
+        issueDate:
+          type: string
+          example: '20.07.2020'
+        issuedBy:
+          type: string
+          example: 'УВД г. Москва'
+        itn:
+          type: string
+          example: '123456789012'
+        snils:
+          type: string
+          example: '123-456-789 12'
+        placeOfEmployment:
+          type: string
+          example: 'Ростелеком'
+        position:
+          type: string
+          example: 'Менеджер'
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - birthDate
+        - phoneNumber
+        - snPassport
+        - regAddress
+        - factAddress
+        - issueDate
+        - issuedBy
+        - itn
+        - snils
+        - placeOfEmployment
+        - position
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-09-03T09:50:05Z"
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+          example: "INTERNAL SERVER ERROR"
+        message:
+          type: string
+          example: "Внутренняя ошибка сервера. Повторите попытку позже."
+        path:
+          type: string
+          example: "/api/v1/customers/{id}/details"
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

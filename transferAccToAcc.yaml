@@ -1,0 +1,533 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Перевод между счетами клиента
+servers:
+- url: http://172.17.1.97:30010
+paths:
+  /accounts:
+    get:
+      summary: Запрос на информацию по счетам клиента
+      operationId: checkAccounts
+      tags:
+        - Account
+      security:
+        - bearerAuth: []
+      parameters:
+       - in: query
+         name: customerId
+         description: Идентификатор клиента
+         required: true
+         schema:
+          type: string
+       - in: query
+         name: isActive
+         description: Статус активности
+         required: true
+         schema:
+          type: string
+          enum: [Active]
+      responses:
+        '200':
+          description: 'ОК'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Accounts'
+        '401':
+          description: Требуется авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                BadRequest:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 401
+                    error: Unauthorized
+                    message: Требуется авторизация
+                    paths: api/v1/accounts
+        '403':
+          description: Нет прав на выполнение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Forbidden:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 403
+                    error: Forbidden
+                    message: У Вас нет прав на выполнение данной операции
+                    paths: api/v1/accounts
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InternalServerError:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 500
+                    error: Internal Server Error
+                    message: Внутренняя ошибка сервера
+                    paths: api/v1/accounts
+  /transfer:
+    get:
+      summary: Расчет комиссии перевода
+      operationId: calcFee
+      tags:
+        - Transfer
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: senderId
+          description: Идентификатор счета-отправителя
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: recipientId
+          description: Идентификатор счета-получателя
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: amount
+          description: Сумма транзакции
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 'ОК'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculatedFee'
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                BadRequest:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 400
+                    error: Bad Request
+                    message: Некорректный запрос
+                    paths: api/v1/transfer
+        '403':
+          description: Нет прав на выполнение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Forbidden:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 403
+                    error: Forbidden
+                    message: У Вас нет прав на выполнение данной операции
+                    paths: api/v1/transfer
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InternalServerError:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 500
+                    error: Internal Server Error
+                    message: Внутренняя ошибка сервера
+                    paths: api/v1/transfer
+  /account:
+    get:
+      summary: Информация по счету для расчета комиссии и проверки является ли получатель/отправитель одним клиентом
+      operationId: checkAccount
+      tags:
+        - Account
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: senderId
+          description: Идентификатор счета-отправителя
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: recipientId
+          description: Идентификатор счета-получателя
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 'ОК'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CheckCustomer'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InternalServerError:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 500
+                    error: Internal Server Error
+                    message: Внутренняя ошибка сервера
+                    paths: api/v1/account
+  /transaction:
+    post:
+      summary: Создание транзакции
+      operationId: createTrans
+      tags:
+       - Transaction
+      security:
+        - bearerAuth: []
+      parameters:
+       - in: query
+         name: senderId
+         description: Идентификатор отправителя
+         required: true
+         schema:
+          type: string
+       - in: query
+         name: senderType
+         description: Тип отправителя
+         required: true
+         schema:
+          type: string
+       - in: query
+         name: recipientType
+         description: Тип отправителя
+         required: true
+         schema:
+          type: string
+      requestBody:
+        required: true
+        description: Введите получателя и сумму
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipientId:
+                  type: string
+                amount:
+                  type: number
+      responses:
+        '201':
+          description: 'Транзакция успешно создана'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Unauthorized:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 401
+                    error: Unauthorized
+                    message: Не авторизован
+                    paths: api/v1/transaction
+        '403':
+          description: Нет прав на выполнение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Forbidden:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 403
+                    error: Forbidden
+                    message: У Вас нет прав на выполнение данной операции
+                    paths: api/v1/transaction
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InternalServerError:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 500
+                    error: Internal Server Error
+                    message: Внутренняя ошибка сервера
+                    paths: api/v1/transaction
+  /hold-balance:
+    patch:
+      summary: Заморозка суммы транзакции на счету
+      operationId: holdBalance
+      tags:
+       - HoldBalance
+      security:
+        - bearerAuth: []
+      parameters:
+       - in: query
+         name: transactionId
+         description: Идентификатор транзакции
+         required: true
+         schema:
+           type: string
+       - in: query
+         name: accountId
+         description: Идентификатор аккаунта
+         required: true
+         schema:
+           type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                balance:
+                  type: number
+                balanceHolded:
+                  type: number
+      responses:
+        '200':
+          description: 'Успешно выполнено'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceHold'
+        "400":
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                BadRequest:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 400
+                    error: Bad Request
+                    message: Некорректный запрос
+                    paths: api/v1/hold-balance
+        '403':
+          description: Нет прав на выполнение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Forbidden:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 403
+                    error: Forbidden
+                    message: У Вас нет прав на выполнение данной операции
+                    paths: api/v1/hold-balance
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InternalServerError:
+                  value:
+                    timestamp: 2024-09-03T09:50:05Z
+                    status: 500
+                    error: Internal Server Error
+                    message: Внутренняя ошибка сервера
+                    paths: api/v1/hold-balance
+components:
+  schemas:
+    Accounts:
+      required:
+        - accountId
+        - accountNumber
+        - balance
+        - currency
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: abf1b69f-e2dd-49f1-b5e0-df923f0a9a5f
+        accountNumber:
+          type: string
+          example: 12341234123412341234
+        balance:
+          type: number
+          format: double
+          example: 123.21
+        currency:
+          type: string
+          example: RUB
+    CalculatedFee:
+      required:
+        - senderId
+        - recipientId
+        - amount
+        - fee
+      type: object
+      properties:
+        senderId:
+          type: string
+          example: 42424kohdyr-erjlhyroyh46464
+        recipientId:
+          type: string
+          example: 42424kohdyr-erjlhyroyh46464
+        amount:
+          type: number
+          format: double
+          example: 1234.12
+        fee:
+          type: number
+          format: double
+          example: 12.34
+    CheckCustomer:
+      type: object
+      properties:
+        typeName:
+          type: string
+          example: Премиум
+        internalTransferFeeMin:
+          type: number
+          format: double
+        internalTransferFeeMax:
+          type: number
+          format: double
+        customerBelongs:
+          type: boolean
+    Transaction:
+      required:
+      - transactionId
+      - amount
+      - recipientId
+      - senderId
+      - description
+      type: object
+      properties:
+        transactionId:
+          type: string
+          example: abf1b69f-e2dd-49f1-b5e0-df923f0a9a5f
+        type:
+          type: string
+          enum:
+           - Transfer
+           - Purchase
+           - Payment
+           - Fee
+           - Interest
+        amount:
+          type: number
+          example: 1234.12
+        status:
+          type: string
+          enum:
+           - Waiting
+           - Pending
+           - Completed
+           - Failed
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          default: null
+        recipientId:
+          type: string
+          example: abf1b69f-e2dd-49f1-b5e0-df923f0a9a5f
+        recipientType:
+          type: string
+          enum:
+           - Account
+           - DebitCard
+           - CreditAccount
+           - CreditCard
+        senderId:
+          type: string
+          example: abf1b69f-e2dd-49f1-b5e0-df923f0a9a5f
+        senderType:
+          type: string
+          enum:
+           - Account
+           - DebitCard
+           - CreditAccount
+           - CreditCard
+        description:
+          type: string
+          example: 'Спасибо за перевод'
+    BalanceHold:
+      required:
+      - accountId
+      - balance
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: abf1b69f-e2dd-49f1-b5e0-df923f0a9a5f
+        balance:
+          type: number
+          format: double
+          example: 1234.12
+        balanceHolded:
+          type: number
+          format: double
+          example: 1234.12 
+    Error:
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          example: 500
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+  securitySchemes:
+    bearerAuth:            
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
